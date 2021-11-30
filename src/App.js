@@ -1,80 +1,62 @@
-import './App.css';
-import {useState, useEffect} from 'react'
+import { lazy, useEffect, Suspense } from 'react';
+import { Switch, Route } from 'react-router-dom';
+import Container from './components/Container';
+import AppBar from './components/AppBar';
+import LoaderComponent from './components/Loader';
 import { ToastContainer } from 'react-toastify';
-import SearchBar from './components/Searchbar'
-import ImageGallery from './components/ImageGallery'
-// import Modal from './components/Modal'
-import LoaderPend from "./components/Loader";
-import Button from './components/Button'
-import pixabayApi from './components/pixabayApi';
-import Error from './components/Error'
+import { addBackToTop } from 'vanilla-back-to-top';
 
-const Status ={
-  IDLE: 'idle',
-  PENDING: 'pending',
-  RESOLVED: 'resolved',
-  REJECTED: 'rejected'
-};
+const HomePage = lazy(() =>
+  import('./views/HomePage' /* webpackChunkName: "HomePage" */),
+);
+
+const MoviesPage = lazy(() =>
+  import('./views/MoviesPage' /* webpackChunkName: "MoviesPage" */),
+);
+
+const MovieDetailsPage = lazy(() =>
+  import(
+    './views/MovieDetailsPage' /* webpackChunkName: "Movie-details-page"*/
+  ),
+);
+const NotFoundView = lazy(() =>
+  import('./views/NotFoundView' /* webpackChunkName: "Not-found-view"*/),
+);
 
 export default function App() {
-  const [pictures, setPictures] = useState([]);
-  const [error, setError] = useState(null);
-  const [queryValue, setQueryValue] = useState('');
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState(Status.IDLE);
-
-  const handleSearchOnSubmit= value => {
-    setQueryValue(value);
-    setPage(1);
-    setPictures([]);
-  }
-
   useEffect(() => {
-    if(!queryValue) { 
-      return
-     }
-    setStatus(Status.PENDING);
+    addBackToTop({
+      backgroundColor: '#e3f309cb',
+      innerHTML:
+        '<svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>',
+      textColor: '#fff',
+    });
+  }, []);
 
-      pixabayApi
-        .fetchPictures(queryValue, page)
-        .then(response => {
-          setPictures(pictures=>[...pictures, ...response.hits]);
-          setStatus(Status.RESOLVED)
-          })
-        .catch(error => {
-          setError(error);
-          setStatus(Status.REJECTED)
-        })
-    }, [queryValue, page]);
+  return (
+    <Container>
+      <AppBar />
+      <Suspense fallback={<LoaderComponent />}>
+        <Switch>
+          <Route path="/" exact>
+            <HomePage />
+          </Route>
 
-    const onLoadMore = () => {
-      setPage(prevState => prevState + 1);
-    };
+          <Route path="/movies" exact>
+            <MoviesPage />
+          </Route>
 
-    return (
-      <div className="App">
-        <SearchBar onSubmit={handleSearchOnSubmit}/>
-        <ToastContainer autoClose={3000} />
-      
-        {status === 'idle'&& (
-          <p className="welcomeText" >Input your query</p> )
-        }
-  
-        {status === 'pending' && (<LoaderPend/>)  
-        }
-  
-        {status === 'rejected' && (
-            <Error message={error.message}/>)
-        }
-  
-        {status === 'resolved' && (
-          <>  
-            <ImageGallery 
-              pictures={pictures}
-              // onOpen={ this.takeLargePicture}
-            /> 
-            <Button onLoadMore={onLoadMore} />
-          </>)}
-      </div>
-    );
+          <Route path="/movies/:movieId">
+            <MovieDetailsPage />
+          </Route>
+
+          <Route>
+            <NotFoundView />
+          </Route>
+        </Switch>
+      </Suspense>
+
+      <ToastContainer />
+    </Container>
+  );
 }

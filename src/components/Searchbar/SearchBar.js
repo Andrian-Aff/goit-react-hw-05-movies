@@ -1,51 +1,45 @@
-import {useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import s from './SearchBar.module.css';
+import PropTypes from 'prop-types';
+import styles from './SearchBar.module.css';
 
-export default function SearchBar({onSubmit}) {
-    const[queryValue, setQueryValue] = useState('')
+export default function SearchBar({ onHandleSubmit }) {
+  const [query, setQuery] = useState('');
 
-   const handleRequestChange = e =>  {
-    setQueryValue(e.currentTarget.value.toLowerCase())
-   } 
+  const handleChangeQuery = event => {
+    setQuery(event.currentTarget.value.toLowerCase());
+  };
 
-   const handleOnSubmit = evt => {
-    evt.preventDefault();
-    if(queryValue.trim()==='') {
-        return toast('Input your request');
-        
+  const handleSubmit = event => {
+    event.preventDefault();
+
+    if (query.trim() === '') {
+      toast.info('Please enter your query!');
+      return;
     }
-    onSubmit(queryValue);
-    setQueryValue('');
+
+    onHandleSubmit(query);
+    setQuery('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className={styles.form}>
+      <input
+        type="text"
+        value={query}
+        autoComplete="off"
+        autoFocus
+        placeholder="Enter movie name..."
+        onChange={handleChangeQuery}
+        className={styles.input}
+      />
+      <button type="submit" className={styles.button}>
+        Search
+      </button>
+    </form>
+  );
 }
 
-// handleOnSubmit = evt => {
-//     evt.preventDefault();
-//     if(this.state.queryValue.trim()==='') {
-//         return toast('Input your request');
-        
-//     }
-//     this.props.onSubmit(this.state.queryValue);
-//     this.setState({queryValue: ''});
-// }
-
-    return(
-        <header className={s.Searchbar}>
-            <form className={s.SearchForm} onSubmit={handleOnSubmit}>
-                <button type="submit" className={s.SearchForm__button}>
-                    <span className={s.SearchForm__button__label}>Search</span>
-                </button>
-                <input
-                className={s.SearchForm__input}
-                type="text"
-                autoComplete="off"
-                autoFocus
-                value={queryValue}
-                placeholder="Search images and photos"
-                onChange={handleRequestChange}
-                />
-            </form>
-        </header>
-    )
-}
+SearchBar.propTypes = {
+  onHandleSubmit: PropTypes.func.isRequired,
+};
